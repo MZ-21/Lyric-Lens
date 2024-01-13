@@ -1,3 +1,4 @@
+
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,55 +12,84 @@ import base64
 import threading
 import time
 
-app = Flask(__name__)
 
-# Variables for communication between threads
-color_lock = threading.Lock()
-current_color = "#000000"
-
-# Function to update color based on sound
+app = Flask(__name__, template_folder='')
 
 
-def update_color():
-    global current_color
+def generate_color(input_value):
+    # Map input_value to RGB components
+    r = input_value
+    g = 1 - input_value
+    b = 0.5
 
-    while True:
-        with color_lock:
-            # Replace this with your actual sound analysis and color mapping logic
-            intensity = 0.5  # Simulated intensity
-            hue = intensity * 360  # Mapping intensity to hue (0-360)
-            current_color = plt.cm.hsv(hue / 360).to_rgba((0, 0, 0))[:3]
-
-        time.sleep(0.1)  # Adjust as needed
+    return r, g, b
 
 
-# Start the color update thread
-color_thread = threading.Thread(target=update_color)
-color_thread.daemon = True
-color_thread.start()
+# input_value = 0.6  # Replace with your actual input value
 
 
-@app.route("/")
-def index():
-    return render_template("index.html", color=current_color)
+# plt.imshow([[color]])
+# plt.axis('off')
+# plt.show()
 
 
-@app.route("/plot.png")
-def plot_png():
-    with color_lock:
-        fig, ax = plt.subplots(figsize=(3, 3))
-        ax.set_facecolor(current_color)
-
-        canvas = FigureCanvas(fig)
-        buf = io.BytesIO()
-        canvas.print_png(buf)
-        data = base64.b64encode(buf.getbuffer()).decode("utf-8")
-
-    return f"data:image/png;base64,{data}"
+@app.route('/<float:input_value>')
+def index(input_value):
+    color = (input_value, 1 - input_value, 0.5)
+    # color = generate_color(input_value)
+    return render_template('web.html', color=color, input_value=input_value)
 
 
-if __name__ == "__main__":
-    app.run(debug=True)
+if __name__ == '__main__':
+    app.static_folder = 'static'
+    app.run(debug=True, port=4000)
+
+
+# # Variables for communication between threads
+# color_lock = threading.Lock()
+# current_color = "#000000"
+
+# # Function to update color based on sound
+# def update_color():
+#     global current_color
+
+#     while True:
+#         with color_lock:
+#             # Replace this with your actual sound analysis and color mapping logic
+#             intensity = 0.5  # Simulated intensity
+#             hue = intensity * 360  # Mapping intensity to hue (0-360)
+#             current_color = plt.cm.hsv(hue / 360).to_rgba((0, 0, 0))[:3]
+
+#         time.sleep(0.1)  # Adjust as needed
+
+
+# # Start the color update thread
+# color_thread = threading.Thread(target=update_color)
+# color_thread.daemon = True
+# color_thread.start()
+
+
+# @app.route("/")
+# def index():
+#     return render_template("index.html", color=current_color)
+
+
+# @app.route("/plot.png")
+# def plot_png():
+#     with color_lock:
+#         fig, ax = plt.subplots(figsize=(3, 3))
+#         ax.set_facecolor(current_color)
+
+#         canvas = FigureCanvas(fig)
+#         buf = io.BytesIO()
+#         canvas.print_png(buf)
+#         data = base64.b64encode(buf.getbuffer()).decode("utf-8")
+
+#     return f"data:image/png;base64,{data}"
+
+
+# if __name__ == "__main__":
+#     app.run(debug=True)
 
 
 # Function to update the color based on audio features
