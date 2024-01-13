@@ -1,32 +1,11 @@
-# import spotipy
-# import pygame
-# from spotipy.oauth2 import SpotifyClientCredentials
-# from pygame import mixer
 
-
-# # Replace 'YOUR_CLIENT_ID' and 'YOUR_CLIENT_SECRET' with your actual credentials
-# client_credentials_manager = SpotifyClientCredentials(client_id='ba032a5182044df09ddb3a5128f0c848', client_secret='df162ca97a6049a4bfe20bab8b877463')
-# sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
-
-# # Replace 'SONG_NAME' with the name of the song you want to search for
-# results = sp.search(q='Sorry', type='track', limit=1)
-# if results['tracks']['items']:
-#     print(results, " results")
-#     track_id = results['tracks']['href']
-#     print(track_id)
-#     mixer.init()
-#     mixer.music.load(track_id)
-#     mixer.music.play()
-#     # Add a delay or loop to keep the program running while the music plays
-#     pygame.time.wait(5000)      
-
-
-# print(results)
-
-
-# import vlc
 import requests
-import pygame
+from pygame import mixer
+from flask import Flask, jsonify, render_template, request
+app = Flask(__name__, template_folder='')
+
+#Instantiate mixer
+mixer.init()
 
 # Replace 'YOUR_CLIENT_ID' and 'YOUR_CLIENT_SECRET' with your Spotify API credentials
 client_id = 'ba032a5182044df09ddb3a5128f0c848'
@@ -48,7 +27,7 @@ search_headers = {'Authorization': f'Bearer {access_token}'}
 search_response = requests.get(search_url, headers=search_headers)
 
 search_response_data = search_response.json()
-print(search_response_data, "res")
+
 
 # Step 3: Get the preview URL
 if 'tracks' in search_response_data and 'items' in search_response_data['tracks'] and search_response_data['tracks']['items']:
@@ -56,18 +35,7 @@ if 'tracks' in search_response_data and 'items' in search_response_data['tracks'
     preview_url = track.get('preview_url')
 
     if preview_url:
-        print(preview_url, ' iiiii')
-        # Create a VLC media instance
-        # media = vlc.Media(preview_url)
-        
-        # # Create a media player instance
-        # player = vlc.MediaPlayer(media)
-        
-        # # Play the media
-        # player.play()
-        
-        # # Wait for the playback to finish (adjust as needed)
-        # player.get_media().get_mrl()
+        print("has preview")
     else:
         print('No preview available for this track.')
 else:
@@ -81,5 +49,34 @@ def download_mp3(url, output_file):
 # Replace 'your_url_here' with the actual URL of the MP3 file
 mp3_url = preview_url
 output_filename = track_name+".mp3"
+mixer.music.load(output_filename)
+
+# Actions to control the music
+@app.route('/pause')
+def pause_music():
+    mixer.music.pause()
+    return jsonify({'status': 'paused'})
+
+@app.route('/resume')
+def resume_music():
+    print("here")
+    mixer.music.unpause()
+    return jsonify({'status': 'resumed'})
+
+@app.route('/stop')
+def stop_music():
+    mixer.music.stop()
+    return jsonify({'status': 'stopped'})
+
+# Load audio file
+@app.route('/')
+def index():
+    mixer.music.play(1)
+    return render_template('music.html', track_name=track_name)
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+
 
 download_mp3(mp3_url, output_filename)
