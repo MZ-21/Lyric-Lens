@@ -1,0 +1,53 @@
+body {
+    background-color: rgb(32, 30, 30);
+    color: rgb(201, 194, 194);
+}
+.main-title{
+    width: fit-content;
+    display: block;
+    margin: auto auto;
+    margin-top: 30px;
+    font-size: 60px;
+    
+}
+
+.app-statement{
+    font-size: 30px;
+    background: linear-gradient(to right, #535458 0%, #545a95 20%, #fd0671 70%,  transparent 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent; 
+    display: block;
+    margin: auto auto;
+    width: 700px;
+    margin-top: 60px;
+      
+}
+.search-container{
+    display: block;
+    width: 700px;
+    margin: auto auto;
+    margin-top: 250px;
+}
+.input-song{
+    width: 600px;
+    height: 30px;
+    border: 1px solid transparent;
+    border-radius: 2px;
+}
+.btn-find {
+    width: 50px;
+    height: 30px;
+    background-color: #ceb8d4;
+    border: 1px solid transparent;
+}
+.btn-find:hover{
+    background-color: #d6cbd9;
+}
+.btn-find:active{
+    background-color: #c9a2d3;
+}
+.title-search{
+    font-size: 30px;
+    color: #825090 ;
+}
