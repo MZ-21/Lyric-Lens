@@ -1,0 +1,28 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Emotions Classification</title>
+</head>
+<body>
+    <h1>Welcome to the Music Emotions Classification Website</h1>
+    <button onclick="getEmotions()">Get Emotions</button>
+    <div id="emotionsResult"></div>
+
+    <script>
+        async function getEmotions() {
+            const response = await fetch('/get_emotions');
+            const data = await response.json();
+            
+            const emotionsResult = document.getElementById('emotionsResult');
+            emotionsResult.innerHTML = "<h2>Emotions:</h2>";
+            
+            data.forEach(item => {
+                emotionsResult.innerHTML += `<p>${item.Title}: ${item.Emotion}</p>`;
+            });
+        }
+    </script>
+</body>
+</html>
