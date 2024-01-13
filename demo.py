@@ -1,14 +1,19 @@
 import pandas as pd
 import nltk 
 from nltk.sentiment import SentimentIntensityAnalyzer
-from flask import Flask, jsonify, render_template
+from flask import Flask, jsonify, render_template, request
 
 nltk.download('vader_lexicon')
 
-app = Flask(__name__, template_folder='/Users/gaurimore/Downloads/music man/music-man/demo.html')
+app = Flask(__name__, template_folder='')
+
+# Read the dataset from a CSV file
+dataset_path = 'Songs.csv'
+df = pd.read_csv(dataset_path)
+
+sia = SentimentIntensityAnalyzer()
 
 def get_emotion_from_lyrics(lyrics):
-    sia = SentimentIntensityAnalyzer()
     polarity_score = sia.polarity_scores(lyrics)['compound']
 
     # Classify genres based on sentiment polarity scores
@@ -24,30 +29,48 @@ def get_emotion_from_lyrics(lyrics):
         return "Sad"
     else:
         return "Other"
+    
+def search_song(song_name):
+    result = df[df['Title'].str.lower() == song_name.lower()]
+
+    if not result.empty:
+        polarity_score = sia.polarity_scores(result['Lyrics'].values[0])['compound']
+        emotion = get_emotion_from_lyrics(result['Lyrics'].values[0])
+
+        return {
+            'Title': result['Title'].values[0],
+            'Emotion': emotion
+        }
+    else:
+        return None
 
 @app.route('/')
 def index():
     return render_template('index.html')
-
-@app.route('/get_genres')
+    
+@app.route('/get_emotions')
 def get_emotions():
-    # Read the dataset from a CSV file
-    dataset_path = 'Songs.csv'
-    df = pd.read_csv(dataset_path)
-
-    # Create a SentimentIntensityAnalyzer instance
-    sia = SentimentIntensityAnalyzer()
-
-    # Calculate polarity scores for each song's lyrics
-    df['Polarity'] = df['Lyrics'].apply(lambda x: sia.polarity_scores(x)['compound'])
 
     # Add a new column 'Genre' to store the predicted genre based on polarity
-    df['Genre'] = df['Polarity'].apply(get_emotion_from_lyrics)
+    df['Emotion'] = df['Lyrics'].apply(get_emotion_from_lyrics)
 
     # Prepare the result as JSON
-    result = df[['Title', 'Genre']].to_dict(orient='records')
+    result = df[['Title', 'Emotion']].to_dict(orient='records')
 
     return jsonify(result)
+
+@app.route('/search')
+def search():
+    # Get the user-inputted song name from the query parameters
+    user_input_song = request.args.get('song_name', '')
+
+    # Perform the search and get the result
+    search_result = search_song(user_input_song)
+
+    if search_result:
+        return jsonify(search_result)
+    else:
+        return jsonify({'error': 'Song not found'})
 
 if __name__ == '__main__':
     app.run(debug=True)

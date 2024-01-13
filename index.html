@@ -8,9 +8,23 @@
 </head>
 <body>
     <h1>Welcome to the Music Emotions Classification Website</h1>
+
+    <!-- Search Bar -->
+    <label for="searchInput">Search for a Song:</label>
+    <input type="text" id="searchInput" placeholder="Enter song name">
+    <button onclick="searchSong()">Search</button>
+
+    <label for="searchInput">Search for Songs by emotions:</label>
+    <input type="text" id="searchInput" placeholder="Enter emotion">
+    <button onclick="searchEmotion()">Search</button>
+
+    <!-- Get Emotions Button -->
     <button onclick="getEmotions()">Get Emotions</button>
+
+    <!-- Display Emotions Result -->
     <div id="emotionsResult"></div>
 
+    <!-- JavaScript -->
     <script>
         async function getEmotions() {
             const response = await fetch('/get_emotions');
@@ -22,6 +36,21 @@
             data.forEach(item => {
                 emotionsResult.innerHTML += `<p>${item.Title}: ${item.Emotion}</p>`;
             });
+        }
+
+        async function searchSong() {
+            const searchInput = document.getElementById('searchInput').value;
+            const response = await fetch(`/search?song_name=${encodeURIComponent(searchInput)}`);
+            const data = await response.json();
+
+            const emotionsResult = document.getElementById('emotionsResult');
+            emotionsResult.innerHTML = "<h2>Search Result:</h2>";
+
+            if (data.error) {
+                emotionsResult.innerHTML += `<p>${data.error}</p>`;
+            } else {
+                emotionsResult.innerHTML += `<p>${data.Title}: ${data.Emotion}</p>`;
+            }
         }
     </script>
 </body>
