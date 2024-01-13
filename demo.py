@@ -5,7 +5,7 @@ from flask import Flask, jsonify, render_template
 
 nltk.download('vader_lexicon')
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='/Users/gaurimore/Downloads/music man/music-man/demo.html')
 
 def get_emotion_from_lyrics(lyrics):
     sia = SentimentIntensityAnalyzer()
