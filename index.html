@@ -14,8 +14,8 @@
     <input type="text" id="searchInput" placeholder="Enter song name">
     <button onclick="searchSong()">Search</button>
 
-    <label for="searchInput">Search for Songs by emotions:</label>
-    <input type="text" id="searchInput" placeholder="Enter emotion">
+    <label for="searchInput2">Search for Songs by emotions:</label>
+    <input type="text" id="searchInput2" placeholder="Enter emotion">
     <button onclick="searchEmotion()">Search</button>
 
     <!-- Get Emotions Button -->
@@ -40,16 +40,51 @@
 
         async function searchSong() {
             const searchInput = document.getElementById('searchInput').value;
-            const response = await fetch(`/search?song_name=${encodeURIComponent(searchInput)}`);
+            const response = await fetch(`/search_song?song_name=${encodeURIComponent(searchInput)}`);
             const data = await response.json();
 
             const emotionsResult = document.getElementById('emotionsResult');
-            emotionsResult.innerHTML = "<h2>Search Result:</h2>";
+            emotionsResult.innerHTML = "<h2>Search Results:</h2>";
 
-            if (data.error) {
+            if ('error' in data) {
                 emotionsResult.innerHTML += `<p>${data.error}</p>`;
             } else {
-                emotionsResult.innerHTML += `<p>${data.Title}: ${data.Emotion}</p>`;
+                const { Title, Artist, Emotion } = data.search_results;
+                emotionsResult.innerHTML += `<p>${Title} by ${Artist}: ${Emotion}</p>`;
+
+                if (data.recommendations.length > 0) {
+                    emotionsResult.innerHTML += "<h3>Recommendations based on Emotions:</h3>";
+                    data.recommendations.forEach(item => {
+                        emotionsResult.innerHTML += `<p>${item.title} by ${item.artist}: ${item.emotion}</p>`;
+                    });
+                } else {
+                    emotionsResult.innerHTML += "<p>No recommendations available.</p>";
+                }
+            }
+        }
+
+        async function searchEmotion() {
+            const searchInput = document.getElementById('searchInput2').value;
+            const response = await fetch(`/search_by_emotion?emotion=${encodeURIComponent(searchInput)}`);
+
+            if (!response.ok) {
+                console.error('Failed to fetch data:', response);
+                return;
+            }
+            const data = await response.json();
+
+            console.log('Received data:', data);
+
+            const emotionsResult = document.getElementById('emotionsResult');
+            emotionsResult.innerHTML = "<h2>Search Results:</h2>";
+
+            if ('error' in data) {
+                emotionsResult.innerHTML += `<p>${data.error}</p>`;
+            } else {
+                console.log(data);
+                data.forEach(item => {
+                    emotionsResult.innerHTML += `<p>${item.Title} by ${item.Artist}: ${item.Emotion}</p>`;
+                });
             }
         }
     </script>
