@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Music Player</title>
+</head>
+<body>
+    <h1>Spotify Music Player</h1>
+    <p>Now playing: {{ track_name }}</p>
+    
+    <button onclick="pauseMusic()">Pause</button>
+    <button onclick="resumeMusic()">Resume</button>
+    <button onclick="stopMusic()">Stop</button>
+
+    <script>
+        function pauseMusic() {
+            // Add logic to pause the music
+            fetch('/pause').then(response => {
+            return response.json();
+        }).then(data => {
+            console.log(data);
+            document.getElementById('paused').innerText = 'Music paused';
+        }).catch(error => {
+            console.error('Error:', error);
+        });
+        }
+
+        function resumeMusic() {
+        fetch('/resume').then(response => {
+            return response.json();
+        }).then(data => {
+            console.log(data);
+            document.getElementById('now-playing').innerText = 'Music resumed';
+        }).catch(error => {
+            console.error('Error:', error);
+        });
+    }
+
+        function stopMusic() {
+            // Add logic to stop the music
+            fetch('/stop').then(response => {
+                // Optionally handle the response from the server
+                return response.json();
+            }).then(data => {
+                // Optionally handle the data received from the server
+                console.log(data);
+
+                // Update the UI or perform other actions as needed
+                document.getElementById('now-playing').innerText = 'Music Stopped';
+            }).catch(error => {
+                // Handle errors
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>
+

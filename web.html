@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Song Sentiment</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+</head>
+<body>
+    <div class="main-screen">
+        <h1 class="main-title">Song Sentiment</h1>
+        <div>
+            <p class="app-statement">Dive Into a World of Music And Art with Song Sentiment! Enter Your Favourite Song Into the Search Engine Below And Watch As Art and Music Come Together As One.</p>
+        </div>
+    </div>
+    <div class="search-container">
+        <h2 class="title-search">Search Song: </h4>
+        <div class="input-song-container">
+            <input class="input-song" type="text" placeholder="song name">
+            <button class="btn-find">Find</button>
+        </div>
+
+    </div>
+    <div class="colour-change">
+        <p>Input Value: {{input_value}}</p>
+        <div>
+           
+        </div>
+    </div>
+</body>
+</html>
