@@ -3,8 +3,12 @@ import nltk
 from nltk.sentiment import SentimentIntensityAnalyzer
 from flask import Flask, jsonify, render_template, request
 import tensorflow_hub as hub
+import os
+from pygame import mixer
+import requests
 
 nltk.download('vader_lexicon')
+
 
 app = Flask(__name__, template_folder='')
 
@@ -94,42 +98,284 @@ def search_emotion(emotion, df, sia):
         return songs_info
     else:
         return None
+    
+#-----------------------------------------------------Music--------------------------------
+# Instantiate mixer
+mixer.init()
+
+
+def check_music_exists(track_name):
+    track_exists_check = track_name + '.mp3'
+    print(track_exists_check, "track name")
+    if os.path.exists(os.getcwd()+'/'+track_exists_check):
+        mixer.music.load(track_exists_check)
+        return True
+
+    return False
+
+
+def search_for_music(track_name):
+
+    # Replace 'YOUR_CLIENT_ID' and 'YOUR_CLIENT_SECRET' with your Spotify API credentials
+    client_id = 'ba032a5182044df09ddb3a5128f0c848'
+    client_secret = 'df162ca97a6049a4bfe20bab8b877463'
+
+    # Replace 'YOUR_TRACK_NAME' with the name of the track you want to play
+
+    # Step 1: Authenticate with Spotify API and get an access token
+    auth_url = 'https://accounts.spotify.com/api/token'
+    auth_data = {'grant_type': 'client_credentials'}
+    auth_response = requests.post(auth_url, auth=(
+        client_id, client_secret), data=auth_data)
+    auth_response_data = auth_response.json()
+    access_token = auth_response_data['access_token']
+
+    # Step 2: Search for the track
+    search_url = f'https://api.spotify.com/v1/search?q={track_name}&type=track&limit=1'
+    search_headers = {'Authorization': f'Bearer {access_token}'}
+    search_response = requests.get(search_url, headers=search_headers)
+
+    search_response_data = search_response.json()
+    # Step 3: Get the preview URL
+    if 'tracks' in search_response_data and 'items' in search_response_data['tracks'] and search_response_data['tracks']['items']:
+        track = search_response_data['tracks']['items'][0]
+        preview_url = track.get('preview_url')
+
+        if preview_url:
+            print("has preview")
+        else:
+            print('No preview available for this track.')
+    else:
+        print('Track not found.')
+
+    def download_mp3(url, output_file):
+        response = requests.get(url)
+        print(response, " outfile")
+
+        with open(output_file, 'wb') as f:
+            f.write(response.content)
+
+    # Replace 'your_url_here' with the actual URL of the MP3 file
+    mp3_url = preview_url
+    output_filename = track_name+".mp3"
+
+    download_mp3(mp3_url, output_filename)
+    mixer.music.load(output_filename)
 
 @app.route('/')
 def index():
-    content_image_url = 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Golden_Gate_Bridge_from_Battery_Spencer.jpg/640px-Golden_Gate_Bridge_from_Battery_Spencer.jpg'  # @param {type:"string"}
-    style_image_url = 'https://upload.wikimedia.org/wikipedia/commons/0/0a/The_Great_Wave_off_Kanagawa.jpg'  # @param {type:"string"}
-    output_image_size = 384  # @param {type:"integer"}
+# Default values
 
-    # The content image size can be arbitrary.
+    encoded_dance_image = None
+    encoded_happy_image = None
+    encoded_image = None
+
+    # Get user input from the query parameters
+    user_input = request.args.get('emotion', '')
+    print(user_input,"i npuuttttttttttttttttttttttttttttttt")
+
+    # if user_input == 'dance':
+    #     print("herererrerr")
+    #     content_dance_url = 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Two_dancers.jpg/640px-Two_dancers.jpg' 
+    #     style_dance_url = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Contemporary_abstract_painting_by_Ib_Benoh_1970s.jpg/640px-Contemporary_abstract_painting_by_Ib_Benoh_1970s.jpg' 
+
+    #     content_happy_url = 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Monkey-accordion.jpg/640px-Monkey-accordion.jpg'
+    #     style_happy_url = 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Mandelbrot_Set_Image_09_by_Aokoroko.jpg/640px-Mandelbrot_Set_Image_09_by_Aokoroko.jpg'
+
+    #     output_image_size = 384  
+
+    #     content_img_size = (output_image_size, output_image_size)
+    #     style_img_size = (256, 256) 
+
+    #     content_dance = load_image(content_dance_url, content_img_size)
+    #     style_dance = load_image(style_dance_url, style_img_size)
+    #     style_dance = tf.nn.avg_pool(style_dance, ksize=[3,3], strides=[1,1], padding='SAME')
+
+    #     content_happy = load_image(content_happy_url, content_img_size)
+    #     style_happy = load_image(style_happy_url, style_img_size)
+    #     style_happy = tf.nn.avg_pool(style_happy, ksize=[3,3], strides=[1,1], padding='SAME')
+    
+    #     # Load TF Hub module.
+    #     hub_handle = 'https://tfhub.dev/google/magenta/arbitrary-image-stylization-v1-256/2'
+    #     hub_module = hub.load(hub_handle)
+
+    #     danceOutputs = hub_module(content_dance, style_dance)
+    #     stylized_danceImage = danceOutputs[0]
+    #     danceOutputs = hub_module(tf.constant(content_dance), tf.constant(style_dance))
+    #     stylized_danceImage = danceOutputs[0]
+
+    #     happyOutputs = hub_module(content_happy, style_happy)
+    #     stylized_happyImage = danceOutputs[0]
+    #     happyOutputs = hub_module(tf.constant(content_happy), tf.constant(style_happy))
+    #     stylized_happyImage = happyOutputs[0]
+
+    #     # Get the base64-encoded image string
+    #     encoded_image = show_and_return_base64([stylized_danceImage, stylized_happyImage],
+    #                                    titles=['Dance', 'Happy'])
+    #     print(encoded_image)
+    #     return render_template('index.html', encoded_image=encoded_image)
+    # elif encoded_image==None:
+    #     return render_template('index.html', encoded_image=encoded_image)
+
+    
+    #     print("hererererer")
+    #     content_dance_url = 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Two_dancers.jpg/640px-Two_dancers.jpg' 
+    #     style_dance_url = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Contemporary_abstract_painting_by_Ib_Benoh_1970s.jpg/640px-Contemporary_abstract_painting_by_Ib_Benoh_1970s.jpg' 
+
+    #     output_image_size = 384  
+    #     content_img_size = (output_image_size, output_image_size)
+    #     style_img_size = (256, 256) 
+
+    #     content_dance = load_image(content_dance_url, content_img_size)
+    #     style_dance = load_image(style_dance_url, style_img_size)
+    #     style_dance = tf.nn.avg_pool(style_dance, ksize=[3,3], strides=[1,1], padding='SAME')
+
+    #     # Load TF Hub module.
+    #     hub_handle = 'https://tfhub.dev/google/magenta/arbitrary-image-stylization-v1-256/2'
+    #     hub_module = hub.load(hub_handle)
+
+    #     # Dance Stylization
+    #     danceOutputs = hub_module(content_dance, style_dance)
+    #     stylized_danceImage = danceOutputs[0]
+    #     print("it is coming here")
+    #     danceOutputs = hub_module(tf.constant(content_dance), tf.constant(style_dance))
+    #     stylized_danceImage = danceOutputs[0]
+    #     print(stylized_danceImage, " immmmmmmggggggg")
+    #     # Get the base64-encoded image string
+    #     #encoded_dance_image = show_and_return_base64([stylized_danceImage], titles=['Dance'])
+    #     encoded_image = show_and_return_base64([stylized_danceImage], titles=['Dance'])
+    #     print(encoded_image)
+    # elif user_input == 'happy':
+    #     content_happy_url = 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Monkey-accordion.jpg/640px-Monkey-accordion.jpg'
+    #     style_happy_url = 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Mandelbrot_Set_Image_09_by_Aokoroko.jpg/640px-Mandelbrot_Set_Image_09_by_Aokoroko.jpg'
+
+    #     output_image_size = 384  
+    #     content_img_size = (output_image_size, output_image_size)
+    #     style_img_size = (256, 256) 
+
+    #     content_happy = load_image(content_happy_url, content_img_size)
+    #     style_happy = load_image(style_happy_url, style_img_size)
+    #     style_happy = tf.nn.avg_pool(style_happy, ksize=[3,3], strides=[1,1], padding='SAME')
+
+    #     # Load TF Hub module.
+    #     hub_handle = 'https://tfhub.dev/google/magenta/arbitrary-image-stylization-v1-256/2'
+    #     hub_module = hub.load(hub_handle)
+
+    #     # Happy Stylization
+    #     happy_outputs = hub_module(content_happy, style_happy)
+    #     stylized_happy_image = happy_outputs[0]
+
+    #     # Get the base64-encoded image string
+    #     #encoded_happy_image = show_and_return_base64([stylized_happy_image], titles=['Happy'])
+    #     encoded_image = show_and_return_base64([stylized_happy_image], titles=['Happy'])
+        
+        #working
+    content_dance_url = 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Two_dancers.jpg/640px-Two_dancers.jpg' 
+    style_dance_url = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Contemporary_abstract_painting_by_Ib_Benoh_1970s.jpg/640px-Contemporary_abstract_painting_by_Ib_Benoh_1970s.jpg' 
+
+    content_happy_url = 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Happy_smiley_face.png/640px-Happy_smiley_face.png'
+    style_happy_url = 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Illuminated_Ferris_wheel%2C_bouncing_castle_and_carousel_at_night_in_a_funfair_in_Vientiane%2C_Laos.jpg/640px-Illuminated_Ferris_wheel%2C_bouncing_castle_and_carousel_at_night_in_a_funfair_in_Vientiane%2C_Laos.jpg'
+
+    content_heartBroken_url = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/The_Far_Cry_%281926%29_-_1.jpg/640px-The_Far_Cry_%281926%29_-_1.jpg'
+    style_heartBroken_url = 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Love_Heart_broken_enameled.svg/640px-Love_Heart_broken_enameled.svg.png' 
+
+    content_dark_url = 'https://upload.wikimedia.org/wikipedia/commons/0/0b/Isolation_and_Community.jpg'
+    style_dark_url = 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Haunts_of_solitude_%288329925989%29.jpg/640px-Haunts_of_solitude_%288329925989%29.jpg'
+
+    content_sad_url = 'https://upload.wikimedia.org/wikipedia/commons/d/d0/Thoma_Loneliness.jpg'
+    style_sad_url = 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Alphonse_Osbert_-_La_Solitude_du_Christ.jpg/640px-Alphonse_Osbert_-_La_Solitude_du_Christ.jpg'
+
+    output_image_size = 384  
+
     content_img_size = (output_image_size, output_image_size)
-    # The style prediction model was trained with image size 256 and it's the 
-    # recommended image size for the style image (though, other sizes work as 
-    # well but will lead to different results).
-    style_img_size = (256, 256)  # Recommended to keep it at 256.
+    style_img_size = (256, 256) 
 
-    content_image = load_image(content_image_url, content_img_size)
-    style_image = load_image(style_image_url, style_img_size)
-    style_image = tf.nn.avg_pool(style_image, ksize=[3,3], strides=[1,1], padding='SAME')
+    content_dance = load_image(content_dance_url, content_img_size)
+    style_dance = load_image(style_dance_url, style_img_size)
+    style_dance = tf.nn.avg_pool(style_dance, ksize=[3,3], strides=[1,1], padding='SAME')
+
+    content_happy = load_image(content_happy_url, content_img_size)
+    style_happy = load_image(style_happy_url, style_img_size)
+    style_happy = tf.nn.avg_pool(style_happy, ksize=[3,3], strides=[1,1], padding='SAME')
+
+    content_heartBroken = load_image(content_heartBroken_url, content_img_size)
+    style_heartBroken = load_image(style_heartBroken_url, style_img_size)
+    style_heartBroken = tf.nn.avg_pool(style_heartBroken, ksize=[3,3], strides=[1,1], padding='SAME')
+
+    content_dark = load_image(content_dark_url, content_img_size)
+    style_dark = load_image(style_dark_url, style_img_size)
+    style_dark = tf.nn.avg_pool(style_dark, ksize=[3,3], strides=[1,1], padding='SAME')
+
+    content_sad = load_image(content_sad_url, content_img_size)
+    style_sad = load_image(style_sad_url, style_img_size)
+    style_sad = tf.nn.avg_pool(style_sad, ksize=[3,3], strides=[1,1], padding='SAME')
     
     # Load TF Hub module.
-
     hub_handle = 'https://tfhub.dev/google/magenta/arbitrary-image-stylization-v1-256/2'
     hub_module = hub.load(hub_handle)
 
-    outputs = hub_module(content_image, style_image)
-    stylized_image = outputs[0]
+    danceOutputs = hub_module(content_dance, style_dance)
+    stylized_danceImage = danceOutputs[0]
+    danceOutputs = hub_module(tf.constant(content_dance), tf.constant(style_dance))
+    stylized_danceImage = danceOutputs[0]
 
-    # Stylize content image with given style image.
-    # This is pretty fast within a few milliseconds on a GPU.
-    outputs = hub_module(tf.constant(content_image), tf.constant(style_image))
-    stylized_image = outputs[0]
+    happyOutputs = hub_module(content_happy, style_happy)
+    stylized_happyImage = danceOutputs[0]
+    happyOutputs = hub_module(tf.constant(content_happy), tf.constant(style_happy))
+    stylized_happyImage = happyOutputs[0]
+
+    heartBrokenOutputs = hub_module(content_heartBroken, style_heartBroken)
+    stylized_heartBrokenImage = heartBrokenOutputs[0]
+    heartBrokenOutputs = hub_module(tf.constant(content_heartBroken), tf.constant(style_heartBroken))
+    stylized_heartBrokenImage = heartBrokenOutputs[0]
+
+    darkOutputs = hub_module(content_dark, style_dark)
+    stylized_darkImage = darkOutputs[0]
+    darkOutputs = hub_module(tf.constant(content_dark), tf.constant(style_dark))
+    stylized_darkImage = darkOutputs[0]
+
+    sadOutputs = hub_module(content_sad, style_sad)
+    stylized_sadImage = sadOutputs[0]
+    sadOutputs = hub_module(tf.constant(content_sad), tf.constant(style_sad))
+    stylized_sadImage = sadOutputs[0]
 
     # Get the base64-encoded image string
-    encoded_image = show_and_return_base64([stylized_image],
-                                       titles=['Stylized image'])
-    return render_template('index.html', encoded_image=encoded_image)
+    encoded_image = show_and_return_base64([stylized_danceImage, stylized_happyImage, stylized_heartBrokenImage, stylized_darkImage, stylized_sadImage],
+                                       titles=['Dance', 'Happy', 'Heart Broken', 'Dark', 'Sad'])
     
+    return render_template('index.html', encoded_image=encoded_image)
+
+@app.route('/play_song')
+def give_song():
+    user_input_song = request.args.get('song_name', '')
+    print(user_input_song, " input")
+    check_truth = check_music_exists(user_input_song)
+    if check_truth:
+        mixer.music.play(1)
+    else:
+        search_for_music(user_input_song)
+        mixer.music.play(1)
+
+    return jsonify({'status': 'play'})
+
+
+@app.route('/pause')
+def pause_music():
+    mixer.music.pause()
+    return jsonify({'status': 'paused'})
+
+
+@app.route('/resume')
+def resume_music():
+    print("here")
+    mixer.music.unpause()
+    return jsonify({'status': 'resumed'})
+
+
+@app.route('/stop')
+def stop_music():
+    mixer.music.stop()
+    return jsonify({'status': 'stopped'})
 @app.route('/get_emotions')
 def get_emotions():
     # Load the dataset from the CSV file
@@ -253,49 +499,6 @@ def show_and_return_base64(images, titles=('', '')):
     plt.close(fig)  # Close the figure to free up resources
 
     return encoded_image
-
-  # @title Load example images  { display-mode: "form" }
-
-# content_image_url = 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Golden_Gate_Bridge_from_Battery_Spencer.jpg/640px-Golden_Gate_Bridge_from_Battery_Spencer.jpg'  # @param {type:"string"}
-# style_image_url = 'https://upload.wikimedia.org/wikipedia/commons/0/0a/The_Great_Wave_off_Kanagawa.jpg'  # @param {type:"string"}
-# output_image_size = 384  # @param {type:"integer"}
-
-# # The content image size can be arbitrary.
-# content_img_size = (output_image_size, output_image_size)
-# # The style prediction model was trained with image size 256 and it's the 
-# # recommended image size for the style image (though, other sizes work as 
-# # well but will lead to different results).
-# style_img_size = (256, 256)  # Recommended to keep it at 256.
-
-# content_image = load_image(content_image_url, content_img_size)
-# style_image = load_image(style_image_url, style_img_size)
-# stylized_image = tf.nn.avg_pool(style_image, ksize=[3,3], strides=[1,1], padding='SAME')
-# print(stylized_image, "ll")
-# # show_n([content_image, style_image], ['Content image', 'Style image'])
-# # Get the base64-encoded image string
-# encoded_image = show_and_return_base64([content_image, style_image, stylized_image],
-#                                        titles=['Original content image', 'Style image', 'Stylized image'])
-# print(encoded_image, "enc")
-
-
-
-# Load TF Hub module.
-
-# hub_handle = 'https://tfhub.dev/google/magenta/arbitrary-image-stylization-v1-256/2'
-# hub_module = hub.load(hub_handle)
-
-# outputs = hub_module(content_image, style_image)
-# stylized_image = outputs[0]
-
-# Stylize content image with given style image.
-# This is pretty fast within a few milliseconds on a GPU.
-
-# outputs = hub_module(tf.constant(content_image), tf.constant(style_image))
-# stylized_image = outputs[0]
-
-# Visualize input images and the generated stylized image.
-
-# show_n([content_image, style_image, stylized_image], titles=['Original content image', 'Style image', 'Stylized image'])
 
 if __name__ == '__main__':
     app.run(debug=True,port=3000)

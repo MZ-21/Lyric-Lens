@@ -5,15 +5,55 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Music Emotions Classification</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"> 
+    <style>
+        .emotion-images {
+            display: none; /* Hide images by default */
+        }
+    </style>
+    
 </head>
 <body>
-    <h1>Welcome to the Music Emotions Classification Website</h1>
+    <div class="main-screen">
+        <h1 class="main-title">Welcome to the Music Emotions Classification Website</h1>
+        <div>
+            <p class="app-statement">Dive Into a World of Music And Art with Song Sentiment! Enter Your Favourite Song Into the Search Engine Below And Watch As Art and Music Come Together As One.</p>
+        </div>
+    </div>
+    <div class="search-container">
+        <div class="search-by-name">
+            <label class="title-search" for="searchInput">Search For A Song:</label>
+            <input class="input" type="text" id="searchInput" placeholder="Enter song name">
+            <button onclick="searchSong()" class='btn-find'>Find</button>
+        </div>
+        <div class="search-by-emotion">                    
+            <label class="title-search" for="searchInput2">Search By Emotions:</label>
+            <input class="input" type="text" id="searchInput" placeholder="Enter emotion">
+            <button onclick="searchEmotion()"  class='btn-find'>Find</button>
+               <!-- Get Emotions Button -->
+            <button onclick="getEmotions()" class='btn-find'>Find Emotions</button>
+        </div>    
+    </div>
+    <div>
+        <img src="data:image/png;base64,{{ encoded_image }}" >
+    </div>
+    <div>
+    <h1 class="music-title">Spotify Music Player</h1>
+    <p id="song-play-label">Now playing: </p>
+    <button onclick="playSong()">Play</button>
+    <button onclick="pauseMusic()">Pause</button>
+    <button onclick="resumeMusic()">Resume</button>
+    <button onclick="stopMusic()">Stop</button>
+</div>
 
-    <img src="data:image/png;base64,{{ encoded_image }}" alt="Stylized image">
+<!-- Display Emotions Result -->
+<div id="emotionsResult"></div>
 
+    <!-- Display associated images only when there is input in the emotion search bar -->
+    <!-- <div class="emotion-images" id="emotionImages"></div> -->
 
     <!-- Search Bar -->
-    <label for="searchInput">Search for a Song:</label>
+    <!-- <label for="searchInput">Search for a Song:</label>
     <input type="text" id="searchInput" placeholder="Enter song name">
     <button onclick="searchSong()">Search</button>
 
@@ -21,11 +61,8 @@
     <input type="text" id="searchInput2" placeholder="Enter emotion">
     <button onclick="searchEmotion()">Search</button>
 
-    <!-- Get Emotions Button -->
     <button onclick="getEmotions()">Get Emotions</button>
-
-    <!-- Display Emotions Result -->
-    <div id="emotionsResult"></div>
+    <div id="emotionsResult"></div> -->
 
     <!-- JavaScript -->
     <script>
@@ -65,18 +102,84 @@
                 }
             }
         }
+        async function playSong(){
+            const searchInput = document.getElementById('searchInput').value;
+            const response = await fetch(`/play_song?song_name=${encodeURIComponent(searchInput)}`);
+            const data = await response.json();
 
+            const searchResult = document.getElementById('song-play-label');
+            print(searchResult)
+            searchResult.innerHTML = `<p>Now playing: ${searchInput}</p>`;
+            
+        }
+        function pauseMusic() {
+            // Add logic to pause the music
+            fetch('/pause').then(response => {
+            return response.json();
+        }).then(data => {
+            console.log(data);
+            document.getElementById('paused').innerText = 'Music paused';
+        }).catch(error => {
+            console.error('Error:', error);
+        });
+        }
+
+        function resumeMusic() {
+        fetch('/resume').then(response => {
+            return response.json();
+        }).then(data => {
+            console.log(data);
+            document.getElementById('now-playing').innerText = 'Music resumed';
+        }).catch(error => {
+            console.error('Error:', error);
+        });
+    }
+
+        function stopMusic() {
+            // Add logic to stop the music
+            fetch('/stop').then(response => {
+                // Optionally handle the response from the server
+                return response.json();
+            }).then(data => {
+                // Optionally handle the data received from the server
+                console.log(data);
+
+                // Update the UI or perform other actions as needed
+                document.getElementById('now-playing').innerText = 'Music Stopped';
+            }).catch(error => {
+                // Handle errors
+                console.error('Error:', error);
+            });
+        }
         async function searchEmotion() {
             const searchInput = document.getElementById('searchInput2').value;
+
+            // First fetch operation
             const response = await fetch(`/search_by_emotion?emotion=${encodeURIComponent(searchInput)}`);
 
             if (!response.ok) {
                 console.error('Failed to fetch data:', response);
                 return;
             }
+
             const data = await response.json();
 
-            console.log('Received data:', data);
+            //Second fetch operation
+            const searchInput2 = document.getElementById('searchInput2').value;
+            const secondResponse = await fetch(`/?emotion=${encodeURIComponent(searchInput2)}`);
+
+            if (!secondResponse.ok) {
+                console.error('Failed to fetch data:', secondResponse);
+                return;
+            }
+
+            data.forEach(item => {
+                    emotionsResult.innerHTML += `<p>${item.Title} by ${item.Artist}: ${item.Emotion}</p>`;
+                });
+            const secondData = await secondResponse.json();
+
+            console.log('Received data from first fetch:', data);
+            console.log('Received data from second fetch:', secondData);
 
             const emotionsResult = document.getElementById('emotionsResult');
             emotionsResult.innerHTML = "<h2>Search Results:</h2>";
@@ -88,7 +191,28 @@
                 data.forEach(item => {
                     emotionsResult.innerHTML += `<p>${item.Title} by ${item.Artist}: ${item.Emotion}</p>`;
                 });
+           }
+
+           if ('error' in secondData) {
+                emotionsResult.innerHTML += `<p>${secondData.error}</p>`;
+            } else {
+                console.log(secondData);
+                secondData.forEach(item => {
+                    emotionsResult.innerHTML += `<p>${item.Title} by ${item.Artist}: ${item.Emotion}</p>`;
+                });
             }
+        }
+
+        async function imageGenerator() {
+            const search_Input = document.getElementById('searchInput2').value;
+      
+            const res = await fetch(`/?emotion=${encodeURIComponent(search_Input)}`);
+
+            if (!response.ok) {
+                console.error('Failed to fetch data:', response);
+                return;
+            }
+            const data = await response.json();            
         }
     </script>
 </body>
