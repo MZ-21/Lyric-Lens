@@ -15,7 +15,7 @@
 </head>
 <body>
     <div class="main-screen">
-        <h1 class="main-title">Welcome to the Music Emotions Classification Website</h1>
+        <h1 class="main-title">Welcome to the Lyric Lens</h1>
         <div>
             <p class="app-statement">Dive Into a World of Music And Art with Song Sentiment! Enter Your Favourite Song Into the Search Engine Below And Watch As Art and Music Come Together As One.</p>
         </div>
@@ -151,6 +151,7 @@
                 console.error('Error:', error);
             });
         }
+
         async function searchEmotion() {
             const searchInput = document.getElementById('searchInput2').value;
 
@@ -172,7 +173,6 @@
                 console.error('Failed to fetch data:', secondResponse);
                 return;
             }
-
             data.forEach(item => {
                     emotionsResult.innerHTML += `<p>${item.Title} by ${item.Artist}: ${item.Emotion}</p>`;
                 });
@@ -184,11 +184,11 @@
             const emotionsResult = document.getElementById('emotionsResult');
             emotionsResult.innerHTML = "<h2>Search Results:</h2>";
 
-            if ('error' in data) {
-                emotionsResult.innerHTML += `<p>${data.error}</p>`;
+            if ('error' in secondData) {
+                emotionsResult.innerHTML += `<p>${secondData.error}</p>`;
             } else {
-                console.log(data);
-                data.forEach(item => {
+                console.log(secondData);
+                secondData.forEach(item => {
                     emotionsResult.innerHTML += `<p>${item.Title} by ${item.Artist}: ${item.Emotion}</p>`;
                 });
            }
